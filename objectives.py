@@ -12,10 +12,10 @@ class Linear():
 
     def __del__(self):
         self.hook_ref.remove()
-        
+
 
 class ConvChannel():
-    
+
     def __init__(self, module, channel, func=torch.mean):
         self.objective = None
         self.channel = channel
@@ -30,7 +30,7 @@ class ConvChannel():
 
     def __del__(self):
         self.hook_ref.remove()
-        
+
 
 class Style():
 
