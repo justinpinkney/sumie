@@ -2,6 +2,8 @@ import torch
 import torchvision
 import numpy as np
 
+import math
+
 def max_to_avg_pool(model):
     for name, child in model.named_children():
         if isinstance(child, torch.nn.MaxPool2d):
@@ -30,3 +32,49 @@ class LearnableImage(torch.nn.Module):
     def forward(self):
         #return self.pixels
         return torch.sigmoid(self.pixels)
+
+def jitter(image, amount):
+    shiftx = np.random.randint(-amount, amount)
+    shifty = np.random.randint(-amount, amount)
+    return image.roll((shiftx, shifty), (2, 3))
+
+def scale(image, amount):
+    scale = np.random.uniform(1/amount, amount)
+    return torch.nn.functional.interpolate(image, scale_factor=scale)
+
+# FFT stuff just like in lucid: https://github.com/tensorflow/lucid
+def rfft2d_freqs(h, w):
+    """Computes 2D spectrum frequencies."""
+
+    fy = np.fft.fftfreq(h)[:, None]
+    fx = np.fft.fftfreq(w)[: math.ceil(w/2) + 1]
+    return np.sqrt(fx * fx + fy * fy)
+
+
+class FftImage(torch.nn.Module):
+
+    def __init__(self, shape, decay_power=1):
+      super(FftImage, self).__init__()
+      h, w, ch = shape
+      freqs = rfft2d_freqs(h, w)
+      init_val_size = (ch,) + freqs.shape + (2,)
+
+      # Create a random variable holding the actual 2D fourier coefficients
+      init_val = np.random.normal(size=init_val_size, scale=0.01)
+      self.pixels = torch.nn.Parameter(torch.Tensor(init_val))
+
+      # Scale the spectrum, see lucid
+      scale = 1.0 / np.maximum(freqs, 1.0 / max(w, h)) ** decay_power
+      scale *= np.sqrt(w * h)
+      scale = torch.from_numpy(scale)
+      self.scale = scale[None,:,:,None].float()
+      self.register_buffer('scale_const', self.scale)
+      self.ch = ch
+      self.w = w
+      self.h = h
+
+    def forward(self):
+      scaled_spectrum_t = self.scale_const*self.pixels
+      image_t = torch.irfft(scaled_spectrum_t, 2)
+      #return torch.sigmoid(image_t[None, :self.ch, :self.h, :self.w]/4)
+      return image_t[None, :self.ch, :self.h, :self.w]/4
