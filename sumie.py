@@ -78,3 +78,19 @@ class FftImage(torch.nn.Module):
       image_t = torch.irfft(scaled_spectrum_t, 2)
       #return torch.sigmoid(image_t[None, :self.ch, :self.h, :self.w]/4)
       return image_t[None, :self.ch, :self.h, :self.w]/4
+
+class DecorrelateColours(torch.nn.Module):
+
+    def __init__(self):
+        super(DecorrelateColours, self).__init__()
+        correlation = torch.tensor([[0.26,  0.09,  0.02],
+                                    [0.27,  0.00, -0.05],
+                                    [0.27, -0.09,  0.03]])
+        max_norm = torch.max(torch.norm(correlation, dim=0))
+        self.register_buffer('correlation_normalised',
+                             correlation/max_norm)
+
+    def forward(self, input):
+        reshaped_image = input.view([3, -1])
+        output = torch.matmul(self.correlation_normalised, reshaped_image)
+        return output.view(input.size())
