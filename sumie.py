@@ -4,6 +4,16 @@ import numpy as np
 
 import math
 
+class InputImage(torch.nn.Module):
+
+    def __init__(self, base, *sequence):
+        super(InputImage, self).__init__()
+        self.base = base
+        self.sequence = torch.nn.Sequential(*sequence)
+
+    def forward(self):
+        return self.sequence(self.base())
+
 def max_to_avg_pool(model):
     for name, child in model.named_children():
         if isinstance(child, torch.nn.MaxPool2d):
@@ -33,14 +43,24 @@ class LearnableImage(torch.nn.Module):
         #return self.pixels
         return torch.sigmoid(self.pixels)
 
-def jitter(image, amount):
-    shiftx = np.random.randint(-amount, amount)
-    shifty = np.random.randint(-amount, amount)
-    return image.roll((shiftx, shifty), (2, 3))
+class Jitter(torch.nn.Module):
+    def __init__(self, amount):
+        super(Jitter, self).__init__()
+        self.amount = amount
 
-def scale(image, amount):
-    scale = np.random.uniform(1/amount, amount)
-    return torch.nn.functional.interpolate(image, scale_factor=scale)
+    def forward(self, image):
+        shiftx = np.random.randint(-self.amount, self.amount)
+        shifty = np.random.randint(-self.amount, self.amount)
+        return image.roll((shiftx, shifty), (2, 3))
+
+class Scale(torch.nn.Module):
+    def __init__(self, amount):
+        super(Scale, self).__init__()
+        self.amount = amount
+
+    def forward(self, image):
+        scale = np.random.uniform(1/self.amount, self.amount)
+        return torch.nn.functional.interpolate(image, scale_factor=scale)
 
 # FFT stuff just like in lucid: https://github.com/tensorflow/lucid
 def rfft2d_freqs(h, w):
