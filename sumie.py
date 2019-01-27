@@ -40,8 +40,7 @@ class LearnableImage(torch.nn.Module):
         self.pixels = torch.nn.Parameter(0.1*torch.randn(1,3,size,size))
 
     def forward(self):
-        #return self.pixels
-        return torch.sigmoid(self.pixels)
+        return self.pixels
 
 class Jitter(torch.nn.Module):
     def __init__(self, amount):
