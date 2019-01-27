@@ -42,25 +42,6 @@ class LearnableImage(torch.nn.Module):
     def forward(self):
         return self.pixels
 
-class Jitter(torch.nn.Module):
-    def __init__(self, amount):
-        super(Jitter, self).__init__()
-        self.amount = amount
-
-    def forward(self, image):
-        shiftx = np.random.randint(-self.amount, self.amount)
-        shifty = np.random.randint(-self.amount, self.amount)
-        return image.roll((shiftx, shifty), (2, 3))
-
-class Scale(torch.nn.Module):
-    def __init__(self, amount):
-        super(Scale, self).__init__()
-        self.amount = amount
-
-    def forward(self, image):
-        scale = np.random.uniform(1/self.amount, self.amount)
-        return torch.nn.functional.interpolate(image, scale_factor=scale)
-
 # FFT stuff just like in lucid: https://github.com/tensorflow/lucid
 def rfft2d_freqs(h, w):
     """Computes 2D spectrum frequencies."""
