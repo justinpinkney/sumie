@@ -1,6 +1,7 @@
+import numpy as np
 import torch
 
-class Jitter(torch.nn.Module):
+class PositionJitter(torch.nn.Module):
     """Shifts and image in the x and y direction by a random amount.
     
     Attributes:
@@ -16,7 +17,7 @@ class Jitter(torch.nn.Module):
 
         """
 
-        super(Jitter, self).__init__()
+        super(PositionJitter, self).__init__()
         self.amount = amount
 
     def forward(self, image):
@@ -24,7 +25,7 @@ class Jitter(torch.nn.Module):
         shifty = np.random.randint(-self.amount, self.amount)
         return image.roll((shiftx, shifty), (2, 3))
 
-class Scale(torch.nn.Module):
+class ScaleJitter(torch.nn.Module):
     """Scales an image by a random factor."""
 
     def __init__(self, amount):
@@ -39,7 +40,7 @@ class Scale(torch.nn.Module):
 
         """
 
-        super(Scale, self).__init__()
+        super(ScaleJitter, self).__init__()
         if not isinstance(amount, tuple):
             amount = (1/amount, amount)
         self.amount = amount
@@ -48,3 +49,24 @@ class Scale(torch.nn.Module):
         scale = np.random.uniform(*self.amount)
         return torch.nn.functional.interpolate(image, scale_factor=scale)
 
+class RandomCrop(torch.nn.Module):
+    """Randomly crops an image to a desired size."""
+
+    def __init__(self, size):
+        """Creates a cropping transform
+
+        Args:
+            size (tuple): desired output size (height, width).
+
+        """
+
+        super(RandomCrop, self).__init__()
+        self.size = size
+
+    def forward(self, image):
+        input_size = image.size()
+        y_start = np.random.randint(0, input_size[2] - self.size[0])
+        y_end = y_start + self.size[0]
+        x_start = np.random.randint(0, input_size[3] - self.size[1])
+        x_end = x_start + self.size[1]
+        return image[:, :, y_start:y_end, x_start:x_end]
