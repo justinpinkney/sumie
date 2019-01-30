@@ -70,3 +70,16 @@ class RandomCrop(torch.nn.Module):
         x_start = np.random.randint(0, input_size[3] - self.size[1])
         x_end = x_start + self.size[1]
         return image[:, :, y_start:y_end, x_start:x_end]
+
+class Normalise(torch.nn.Module):
+    """Applies imagenet normalisation to an image Tensor."""
+
+    def __init__(self):
+        super(Normalise, self).__init__()
+        mean = torch.as_tensor([0.485, 0.456, 0.406])
+        std = torch.as_tensor([0.229, 0.224, 0.225])
+        self.register_buffer('imnet_mean', mean)
+        self.register_buffer('imnet_std', std)
+
+    def forward(self, image):
+        return (in_tensor - self.imnet_mean[None,:,None,None]) / self.imnet_std[None,:,None,None]

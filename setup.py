@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='sumi',
+setup(name='sumie',
       version='0.1',
       description='Neural network visualisation libarary',
       url='http://github.com/justinpinkney/sumi',

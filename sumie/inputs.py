@@ -40,7 +40,7 @@ class FftImage(torch.nn.Module):
       super(FftImage, self).__init__()
       h, w = shape
       freqs = rfft2d_freqs(h, w)
-      init_val_size = (ch,) + freqs.shape + (2,)
+      init_val_size = (3,) + freqs.shape + (2,)
 
       # Create a random variable holding the actual 2D fourier coefficients
       init_val = np.random.normal(size=init_val_size, scale=0.01)
