@@ -4,11 +4,14 @@ import numpy as np
 
 import math
 
+import sumie.inputs
+import sumie.sumie
+
 class Image(torch.nn.Module):
     """Contains a paramterised image and tranformations for optimisation.
     """
 
-    def __init__(self):
+    def __init__(self, size=224, param='fft', decorrelate=True, limit='sigmoid', transforms=[]):
         """Creates an Image for optimisation.
 
         Args:
@@ -21,12 +24,21 @@ class Image(torch.nn.Module):
 
         """
 
-        image = sumie.Image(224, 'fft',
-                                decorrelate=True,
-                                limit='sigmoid',
-                                transforms=transforms)
-        pass
+        # TODO parse inputs
+        super(Image, self).__init__()
+        self.base_image = sumie.inputs.FftImage((size, size))
+        self.decorrelation = sumie.sumie.DecorrelateColours()
+        self.limit = torch.nn.Sigmoid()
+        self.transforms = torch.nn.Sequential(*transforms)
 
+    def forward(self):
+        im = self.get_image()
+        return self.transforms(im)
+
+    def get_image(self):
+        im = self.base_image()
+        im = self.decorrelation(im)
+        return self.limit(im)
 
 class InputImage(torch.nn.Module):
 
