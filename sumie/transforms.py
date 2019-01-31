@@ -3,7 +3,7 @@ import torch
 
 class PositionJitter(torch.nn.Module):
     """Shifts and image in the x and y direction by a random amount.
-    
+
     Attributes:
         amount (int): maximum amount of shift in pixels
 
@@ -35,7 +35,7 @@ class ScaleJitter(torch.nn.Module):
             amount (int or tuple): max amount of scaling to apply.
 
         Note:
-            If specifying a single int for the `amount` then the scaling 
+            If specifying a single int for the `amount` then the scaling
             range is assumed to be from (1/amount, amount).
 
         """
@@ -82,4 +82,15 @@ class Normalise(torch.nn.Module):
         self.register_buffer('imnet_std', std)
 
     def forward(self, image):
-        return (in_tensor - self.imnet_mean[None,:,None,None]) / self.imnet_std[None,:,None,None]
+        return (image - self.imnet_mean[None,:,None,None]) / self.imnet_std[None,:,None,None]
+
+class Interpolate(torch.nn.Module):
+    """Interpolates and image by a factor."""
+
+    def __init__(self, factor):
+        super(Interpolate, self).__init__()
+        self.interp = torch.nn.functional.interpolate
+        self.factor = factor
+
+    def forward(self, x):
+        return self.interp(x, scale_factor=self.factor, mode='bilinear')
