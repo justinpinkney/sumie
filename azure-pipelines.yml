@@ -41,6 +41,6 @@ jobs:
     condition: succeededOrFailed()
 
   - script: |
-      bash <(curl -s https://codecov.io/bash)
+      bash <(curl -s https://codecov.io/bash) -t 9569761c-9cbd-4aed-8e1b-52520ca53acd
     displayName: 'codecov'
 
