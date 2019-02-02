@@ -30,8 +30,8 @@ jobs:
 
   - script: |
       pip install .
-      pip install pytest
-      pytest tests --doctest-modules --junitxml=junit/test-results.xml
+      pip install pytest pytest-cov
+      pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=sumie/ --cov-report=xml
     displayName: 'pytest'
 
   - task: PublishTestResults@2
@@ -39,3 +39,8 @@ jobs:
       testResultsFiles: '**/test-results.xml'
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
+
+  - script: |
+      bash <(curl -s https://codecov.io/bash)
+    displayName: 'codecov'
+
