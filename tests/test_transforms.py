@@ -28,3 +28,17 @@ def test_random_crop_size():
     out = transform(image)
 
     assert out.size() == (1, 3) + size
+
+def test_interpolate_size():
+    """Interpolate should change size by desired factor."""
+
+    size = (10, 12)
+    factors = (0.5, 1, 2)
+
+    for factor in factors:
+        expected_size = tuple(factor*x for x in size)
+        transform = sumie.transforms.Interpolate(factor)
+        image = torch.randn(1, 3, *size)
+        out = transform(image)
+
+        assert out.size() == (1, 3) + expected_size
