@@ -31,27 +31,66 @@ class ConvChannel():
     def __del__(self):
         self.hook_ref.remove()
 
+class Content():
+
+    def __init__(self, module, model, image):
+        self.objective = 0
+        hook_ref = module.register_forward_hook(self.init_hook)
+        model(image)
+        hook_ref.remove()
+
+        self.hook_ref = module.register_forward_hook(self.hook)
+        self.criterion = torch.nn.MSELoss()
+
+    def init_hook(self, module, hook_in, hook_out):
+        self.target = hook_out.detach()
+        self.target_size = self.target.size()[2:]
+
+    def hook(self, module, hook_in, hook_out):
+        output = hook_out.clone()
+        scaled_output = torch.nn.functional.interpolate(output, size=self.target_size)
+        self.objective = self.criterion(scaled_output, self.target)
+
+    def __del__(self):
+        self.hook_ref.remove()
 
 class Style():
 
-    def __init__(self, module, model, image):
-        self.hook_ref = module.register_forward_hook(self.init_hook)
+    def __init__(self, modules, model, image, weights=None):
+        hook_ref = dict()
+        self.target = dict()
+        self.weights = weights
+        self.objective = 0
+        for module in modules:
+            hook_ref[module] = module.register_forward_hook(self.init_hook)
         model(image)
-        self.hook_ref.remove()
-        self.hook_ref = module.register_forward_hook(self.hook)
-        self.values = []
+        for module in modules:
+            hook_ref[module].remove()
+
+        self.hook_ref = dict()
+        for idx, module in enumerate(modules):
+            self.hook_ref[module] = module.register_forward_hook(lambda a, b, c, this_idx=idx: self.hook(a, b, c, this_idx))
+
         self.criterion = torch.nn.MSELoss()
 
     def init_hook(self, module, hook_in, hook_out):
         target = hook_out.detach()
-        self.target = self.gram_matrix(target)
+        self.target[module] = self.gram_matrix(target)
 
-    def hook(self, module, hook_in, hook_out):
+    def hook(self, module, hook_in, hook_out, idx):
         output = hook_out.clone()
-        self.objective = self.criterion(self.gram_matrix(output), self.target)
+        if self.weights:
+            weight = self.weights[idx]
+        else:
+            weight = 1
+        if idx == 0:
+            self.objective = 0
+        this_contribution = weight*self.criterion(self.gram_matrix(output), self.target[module])
+        self.objective += this_contribution
 
     def __del__(self):
-        self.hook_ref.remove()
+        for hook_ref in self.hook_ref.values():
+            hook_ref.remove()
 
     def gram_matrix(self, input):
         a, b, c, d = input.size()

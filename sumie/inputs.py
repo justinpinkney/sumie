@@ -19,7 +19,7 @@ class RgbImage(torch.nn.Module):
             size = (size, size)
 
         #TODO allow other initialisations
-        noise_scale = 0.1
+        noise_scale = 0.01
         self.pixels = torch.nn.Parameter(noise_scale*torch.randn(1, 3, *size))
 
     def forward(self):
@@ -59,4 +59,3 @@ class FftImage(torch.nn.Module):
       scaled_spectrum_t = self.scale_const*self.pixels
       image_t = torch.irfft(scaled_spectrum_t, 2)
       return image_t[None, :, :self.h, :self.w]/4
-

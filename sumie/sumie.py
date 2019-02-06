@@ -26,8 +26,14 @@ class Image(torch.nn.Module):
 
         # TODO parse inputs
         super(Image, self).__init__()
-        self.base_image = sumie.inputs.FftImage((size, size))
-        self.decorrelation = sumie.sumie.DecorrelateColours()
+        if param == 'fft':
+            self.base_image = sumie.inputs.FftImage((size, size))
+        elif param == 'rgb':
+            self.base_image = sumie.inputs.RgbImage((size, size))
+        if decorrelate:
+            self.decorrelation = sumie.sumie.DecorrelateColours()
+        else:
+            self.decorrelation = None
         self.limit = torch.nn.Sigmoid()
         self.transforms = torch.nn.Sequential(*transforms)
 
@@ -37,7 +43,8 @@ class Image(torch.nn.Module):
 
     def get_image(self):
         im = self.base_image()
-        im = self.decorrelation(im)
+        if self.decorrelation:
+            im = self.decorrelation(im)
         return self.limit(im)
 
 class InputImage(torch.nn.Module):
