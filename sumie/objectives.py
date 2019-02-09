@@ -47,8 +47,8 @@ class Content():
         self.target_size = self.target.size()[2:]
 
     def hook(self, module, hook_in, hook_out):
-        output = hook_out.clone()
-        scaled_output = torch.nn.functional.interpolate(output, size=self.target_size)
+        scaled_output = hook_out
+        #scaled_output = torch.nn.functional.interpolate(output, size=self.target_size)
         self.objective = self.criterion(scaled_output, self.target)
 
     def __del__(self):
@@ -78,7 +78,7 @@ class Style():
         self.target[module] = self.gram_matrix(target)
 
     def hook(self, module, hook_in, hook_out, idx):
-        output = hook_out.clone()
+        output = hook_out
         if self.weights:
             weight = self.weights[idx]
         else:
