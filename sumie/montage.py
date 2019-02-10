@@ -5,12 +5,6 @@ import matplotlib.pyplot as plt
 import math
 import skimage
 
-def load_image(filename, im_size):
-    im = Image.open(filename).resize(im_size)
-    original_im = np.asarray(im)
-    target = torch.Tensor(original_im[:im_size[1],:im_size[0],:])
-    return target.permute(2,1,0).unsqueeze(0)
-
 def show(t):
     """Display the image tensor 1x3xhxw"""
     no_batch = t.detach().squeeze(0)
