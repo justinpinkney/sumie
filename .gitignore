@@ -1,7 +1,6 @@
 .ipynb_checkpoints/
 __pycache__/
 venv/
-*.jpg
 *.egg-info/
 *.swp
 .coverage
