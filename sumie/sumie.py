@@ -34,7 +34,12 @@ class Image(torch.nn.Module):
             self.decorrelation = sumie.sumie.DecorrelateColours()
         else:
             self.decorrelation = None
-        self.limit = torch.nn.Sigmoid()
+        if limit == 'sigmoid':
+            self.limit = torch.nn.Sigmoid()
+        elif limit == 'clamp':
+            self.limit = lambda im: torch.clamp(im + 0.5, min=0, max=1)
+        else:
+            self.limit = None
         self.transforms = torch.nn.Sequential(*transforms)
 
     def forward(self):
@@ -45,7 +50,11 @@ class Image(torch.nn.Module):
         im = self.base_image()
         if self.decorrelation:
             im = self.decorrelation(im)
-        return self.limit(im)
+        if self.limit:
+            im = self.limit(im)
+        else:
+            im = im + 0.5
+        return im
 
 class InputImage(torch.nn.Module):
 
