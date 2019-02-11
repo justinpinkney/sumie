@@ -11,7 +11,7 @@ def load_file(filename, size=None):
     if size:
         im = im.resize(size)
     original_im = np.asarray(im)
-    target = torch.Tensor(original_im)
+    target = torch.Tensor(original_im)/255
     return target.permute(2,1,0).unsqueeze(0)
 
 def load_url(url, size=None):

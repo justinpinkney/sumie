@@ -1,4 +1,5 @@
 import sumie.io
+import torch
 
 from pathlib import Path
 
@@ -8,6 +9,8 @@ def test_im_file():
     image = sumie.io.load_file(filename)
 
     assert image.size() == (1, 3, 296, 221)
+    assert torch.all(image <= 1)
+    assert torch.all(image >= 0)
 
 def test_im_file_resize():
     """Load and resize an image."""
@@ -16,6 +19,8 @@ def test_im_file_resize():
     image = sumie.io.load_file(filename, size=expected_size)
 
     assert image.size() == (1, 3,) + expected_size
+    assert torch.all(image <= 1)
+    assert torch.all(image >= 0)
 
 def test_im_url():
     """Load an image from a url."""
@@ -24,3 +29,5 @@ def test_im_url():
     image = sumie.io.load_url(url, size=expected_size)
 
     assert image.size() == (1, 3,) + expected_size
+    assert torch.all(image <= 1)
+    assert torch.all(image >= 0)

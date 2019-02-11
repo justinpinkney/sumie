@@ -19,7 +19,6 @@ class RgbImage(torch.nn.Module):
         if not isinstance(size, tuple):
             size = (size, size)
 
-        #TODO allow other initialisations
         self.pixels = torch.nn.Parameter(noise*torch.randn(1, 3, *size))
 
     def forward(self):

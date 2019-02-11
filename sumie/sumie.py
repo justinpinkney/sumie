@@ -11,7 +11,7 @@ class Image(torch.nn.Module):
     """Contains a paramterised image and tranformations for optimisation.
     """
 
-    def __init__(self, size=224, param='fft', decorrelate=True, limit='sigmoid', transforms=[]):
+    def __init__(self, size=224, param='fft', decorrelate=True, limit='sigmoid', transforms=[], init=None):
         """Creates an Image for optimisation.
 
         Args:
@@ -24,7 +24,6 @@ class Image(torch.nn.Module):
 
         """
 
-        # TODO parse inputs
         super(Image, self).__init__()
         if param == 'fft':
             self.base_image = sumie.inputs.FftImage((size, size))
@@ -42,6 +41,9 @@ class Image(torch.nn.Module):
             self.limit = None
         self.transforms = torch.nn.Sequential(*transforms)
 
+        if init is not None:
+            self.initialise(init)
+
     def forward(self):
         im = self.get_image()
         return self.transforms(im)
@@ -56,16 +58,17 @@ class Image(torch.nn.Module):
             im = im + 0.5
         return im
 
-class InputImage(torch.nn.Module):
-
-    def __init__(self, base, *sequence):
-        super(InputImage, self).__init__()
-        self.base = base
-        self.sequence = torch.nn.Sequential(*sequence)
-
-    def forward(self):
-        return self.sequence(self.base())
-
+    def initialise(self, init):
+        # TODO handle failures
+        criterion = torch.nn.MSELoss()
+        optimiser = torch.optim.Adam(self.parameters(), lr=0.1)
+        steps = 200
+        for iteration in range(steps):
+            optimiser.zero_grad()
+            loss = criterion(self.get_image(), init)
+            loss.backward()
+            optimiser.step()
+            
 
 class DecorrelateColours(torch.nn.Module):
 
