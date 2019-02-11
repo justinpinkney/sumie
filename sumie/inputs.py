@@ -7,11 +7,12 @@ import math
 class RgbImage(torch.nn.Module):
     """An image stored as a set of RGB pixel values."""
 
-    def __init__(self, size):
+    def __init__(self, size, noise=0.01):
         """Creates a simple RGB image.
 
         Args:
             size (int or tuple): the height and width of the image.
+            noise (float optional): scale of random noise.
 
         """
         super(RgbImage, self).__init__()
@@ -19,8 +20,7 @@ class RgbImage(torch.nn.Module):
             size = (size, size)
 
         #TODO allow other initialisations
-        noise_scale = 0.01
-        self.pixels = torch.nn.Parameter(noise_scale*torch.randn(1, 3, *size))
+        self.pixels = torch.nn.Parameter(noise*torch.randn(1, 3, *size))
 
     def forward(self):
         return self.pixels

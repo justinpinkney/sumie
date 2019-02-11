@@ -1,4 +1,5 @@
 import sumie.inputs
+import torch
 
 def test_square_rgb():
     """Get a square rgb image"""
@@ -18,3 +19,9 @@ def test_rect_rgb():
     output = image()
     
     assert output.size() == (1, 3,) + size
+
+def test_zeros_rgb():
+    """init with zeros."""
+    image = sumie.inputs.RgbImage((100,100), noise=0)
+
+    assert torch.all(image() == 0)
