@@ -28,7 +28,7 @@ class ConvChannel():
         self.objective = self.func(target)
         self.values = hook_out.clone()
 
-    def __del__(self):
+    def remove(self):
         self.hook_ref.remove()
 
 class Content():
