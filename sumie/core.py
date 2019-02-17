@@ -88,13 +88,20 @@ class DecorrelateColours(torch.nn.Module):
 class Optimiser():
     """Optimises an Image to some objective."""
     def __init__(self):
-        pass
+        self.history = []
 
     def run(self, image, model, objective, iterations=256, lr=0.1):
         optimiser = torch.optim.Adam(image.parameters(), lr=lr)
+        
         for i in range(iterations):
             optimiser.zero_grad()
             model(image())
             loss = -objective.objective
+            self.history.append(objective.objective.detach().cpu())
             loss.backward()
             optimiser.step()
+        
+        # Run model one more time to get final loss
+        model(image())
+        self.history.append(objective.objective.detach().cpu())
+        

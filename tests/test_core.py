@@ -20,21 +20,37 @@ def test_image_init(param, decorrelate):
 
 def test_optimiser():
     """Optimiser class optimises an image given an objective."""
+    model, objective, image = setup_optimiser()
+    original_image, start_value = get_state(model, image, objective)
+    
+    opt = sumie.Optimiser()
+    opt.run(image, model, objective, iterations=10)
+    
+    new_image, end_value = get_state(model, image, objective)
+    assert torch.any(new_image != original_image)
+    assert end_value > start_value
+
+def test_optimiser_history():
+    """Optimiser stores objective history."""
+    model, objective, image = setup_optimiser()
+    n_iterations = 10
+    
+    opt = sumie.Optimiser()
+    opt.run(image, model, objective, iterations=n_iterations)
+    new_image, end_value = get_state(model, image, objective)
+
+    # +1 as we get the initial and final losses
+    assert len(opt.history) == n_iterations + 1
+    assert opt.history[-1] == end_value
+
+def get_state(model, image, objective):
+    """Return the current image and value of objective."""
+    model(image())
+    return image.get_image(), objective.objective
+
+def setup_optimiser():
     model = tests.utils.make_net()
     objective = sumie.objectives.ConvChannel(model[0], 0)
     image = sumie.Image(10)
-    original_image = image.get_image()
-
-    model(image())
-    start_value = objective.objective
-
-    opt = sumie.Optimiser()
-    opt.run(image, model, objective, iterations=10)
-
-    new_image = image.get_image()
-    assert torch.any(new_image != original_image)
-
-    model(image())
-    end_value = objective.objective
-
-    assert end_value > start_value
+    
+    return model, objective, image
