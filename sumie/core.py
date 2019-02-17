@@ -5,7 +5,6 @@ import numpy as np
 import math
 
 import sumie.inputs
-import sumie.sumie
 
 class Image(torch.nn.Module):
     """Contains a paramterised image and tranformations for optimisation.
@@ -30,7 +29,7 @@ class Image(torch.nn.Module):
         elif param == 'rgb':
             self.base_image = sumie.inputs.RgbImage((size, size))
         if decorrelate:
-            self.decorrelation = sumie.sumie.DecorrelateColours()
+            self.decorrelation = DecorrelateColours()
         else:
             self.decorrelation = None
         if limit == 'sigmoid':
@@ -85,3 +84,17 @@ class DecorrelateColours(torch.nn.Module):
         reshaped_image = input.view([3, -1])
         output = torch.matmul(self.correlation_normalised, reshaped_image)
         return output.view(input.size())
+
+class Optimiser():
+    """Optimises an Image to some objective."""
+    def __init__(self):
+        pass
+
+    def run(self, image, model, objective, iterations=256):
+        optimiser = torch.optim.Adam(image.parameters(), lr=0.1)
+        for i in range(iterations):
+            optimiser.zero_grad()
+            model(image())
+            loss = -objective.objective
+            loss.backward()
+            optimiser.step()
