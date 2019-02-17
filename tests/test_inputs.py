@@ -1,4 +1,4 @@
-import sumie.inputs
+import sumie
 import torch
 
 def test_square_rgb():

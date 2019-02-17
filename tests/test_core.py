@@ -20,7 +20,7 @@ def test_image_init(param, decorrelate):
 
 def test_optimiser():
     """Optimiser class optimises an image given an objective."""
-    model = tests.test_objectives.make_net()
+    model = tests.utils.make_net()
     objective = sumie.objectives.ConvChannel(model[0], 0)
     image = sumie.Image(10)
     original_image = image.get_image()

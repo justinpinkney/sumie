@@ -1,5 +1,5 @@
 import torch
-import sumie.transforms
+import sumie
 
 def test_position_jitter_size():
     """Get the same size out as in."""

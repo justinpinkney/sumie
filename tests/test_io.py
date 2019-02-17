@@ -1,4 +1,4 @@
-import sumie.io
+import sumie
 import torch
 
 from pathlib import Path
