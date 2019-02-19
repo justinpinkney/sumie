@@ -4,6 +4,7 @@ import pytest
 import tests
 
 from pathlib import Path
+from glob import glob
 
 @pytest.mark.parametrize("param", ["rgb", "fft"])
 @pytest.mark.parametrize("decorrelate", [True, False])
@@ -43,6 +44,19 @@ def test_optimiser_history():
     assert len(opt.history) == n_iterations + 1
     assert opt.history[-1] == end_value
 
+def test_optimiser_output(tmpdir):
+    """Save image per iteration of the optimiser."""
+    model, objective, image = setup_optimiser()
+    n_iterations = 10
+    
+    opt = sumie.Optimiser()
+    opt.run(image, model, objective, iterations=n_iterations, output=tmpdir)
+
+    search = str(tmpdir.join('*.jpg'))
+    print(search)
+    assert len(glob(search)) == 11
+
+# Utility functions
 def get_state(model, image, objective):
     """Return the current image and value of objective."""
     model(image())

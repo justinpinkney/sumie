@@ -1,6 +1,7 @@
 import torch
 import torchvision
 import numpy as np
+import PIL
 
 import math
 
@@ -90,7 +91,7 @@ class Optimiser():
     def __init__(self):
         self.history = []
 
-    def run(self, image, model, objective, iterations=256, lr=0.1):
+    def run(self, image, model, objective, iterations=256, lr=0.1, output=None):
         optimiser = torch.optim.Adam(image.parameters(), lr=lr)
         
         for i in range(iterations):
@@ -98,10 +99,20 @@ class Optimiser():
             model(image())
             loss = -objective.objective
             self.history.append(objective.objective.detach().cpu())
+            if output:
+                self._save_snapshot(output, image, i)
             loss.backward()
             optimiser.step()
         
         # Run model one more time to get final loss
         model(image())
         self.history.append(objective.objective.detach().cpu())
+        if output:
+            self._save_snapshot(output, image, i+1)
         
+    def _save_snapshot(self, output, image, i):
+        # TODO track number of saved outputs instead of using iterations
+        filename = output.join(f"{i:06}.jpg")
+        output_image = image.get_image().detach().cpu().numpy()
+        jpg = PIL.Image.fromarray(np.uint8(255*np.squeeze(output_image.transpose((2, 3, 1, 0)))))
+        jpg.save(str(filename))
