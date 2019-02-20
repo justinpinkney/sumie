@@ -24,9 +24,9 @@ class ConvChannel():
         self.values = None
 
     def hook(self, module, hook_in, hook_out):
-        target = hook_out.clone()[0, self.channel, :, :]
+        target = hook_out[0, self.channel, :, :]
         self.objective = self.func(target)
-        self.values = hook_out.clone()
+        self.values = hook_out
 
     def remove(self):
         self.hook_ref.remove()
@@ -47,11 +47,10 @@ class Content():
         self.target_size = self.target.size()[2:]
 
     def hook(self, module, hook_in, hook_out):
-        output = hook_out
-        scaled_output = torch.nn.functional.interpolate(output, size=self.target_size)
+        scaled_output = torch.nn.functional.interpolate(hook_output, size=self.target_size)
         self.objective = self.criterion(scaled_output, self.target)
 
-    def __del__(self):
+    def remove(self):
         self.hook_ref.remove()
 
 class Style():
