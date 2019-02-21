@@ -29,6 +29,8 @@ class Image(torch.nn.Module):
             self.base_image = sumie.inputs.FftImage((size, size))
         elif param == 'rgb':
             self.base_image = sumie.inputs.RgbImage((size, size))
+        elif param == 'cppn':
+            self.base_image = sumie.cppn.cppn(size)
         if decorrelate:
             self.decorrelation = DecorrelateColours()
         else:
@@ -61,7 +63,11 @@ class Image(torch.nn.Module):
     def initialise(self, init):
         # TODO handle failures
         criterion = torch.nn.MSELoss()
-        optimiser = torch.optim.Adam(self.parameters(), lr=0.1)
+        if isinstance(self.base_image, sumie.cppn.cppn):
+            lr = 0.01
+        else:
+            lr = 0.1
+        optimiser = torch.optim.Adam(self.parameters(), lr=lr)
         steps = 200
         for iteration in range(steps):
             optimiser.zero_grad()

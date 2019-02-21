@@ -8,6 +8,20 @@ def comp_activation(x, unbiased=True):
     x2 = (x*x - 0.45)/0.396
     return torch.cat((x1, x2), dim=1)
 
+class cppn(torch.nn.Module):
+    """Creates a default cppn as an input image."""
+
+    def __init__(self, size):
+        super(cppn, self).__init__()
+        x = np.linspace(-1.5, 1.5, size)
+        y = np.linspace(-1.5, 1.5, size)
+        xx, yy = np.meshgrid(x, y)
+        self.input = torch.Tensor(np.dstack((xx, yy))).permute(2, 1, 0).unsqueeze(0)
+        self.net = CPPN(8, 24)
+
+    def forward(self):
+        return self.net(self.input)
+
 class CPPN(torch.nn.Module):
     """Implements a compositional pattern producing network."""
 
@@ -35,7 +49,7 @@ class CPPN(torch.nn.Module):
         for layer in self.innerLayer:
             x = self.activation(layer(x))
 
-        x = self.outputLayer(x).sigmoid()
+        x = self.outputLayer(x)
         return x
 
 

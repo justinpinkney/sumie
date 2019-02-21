@@ -19,6 +19,18 @@ def test_image_init(param, decorrelate):
     difference = torch.abs(output_image - init_image)
     assert torch.nn.functional.mse_loss(output_image, init_image) < 1e-3
 
+@pytest.mark.slow
+def test_image_init_cppn():
+    """Use lower freq image to test cppn"""
+    filename = Path(__file__).with_name("tree_lf.jpg")
+    init_image = sumie.io.load_file(filename, size=(50, 50))
+
+    image = sumie.Image(param='cppn', size=50, init=init_image)
+    
+    output_image = image.get_image()
+    difference = torch.abs(output_image - init_image)
+    assert torch.nn.functional.mse_loss(output_image, init_image) < 1e-3
+    
 def test_optimiser():
     """Optimiser class optimises an image given an objective."""
     model, objective, image = setup_optimiser()
