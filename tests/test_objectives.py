@@ -7,7 +7,7 @@ def test_hook_add_remove():
     model = tests.utils.make_net()
     objective = sumie.objectives.ConvChannel(model[0], 1)
     assert len(model[0]._forward_hooks) == 1
-    objective.remove()
+    del objective
     assert len(model[0]._forward_hooks) == 0
 
 def test_conv_objective():

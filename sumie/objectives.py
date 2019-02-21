@@ -1,35 +1,47 @@
 import torch
 
-class Linear():
-
-    def __init__(self, module, index):
-        self.objective = None
-        self.index = index
+class ModuleMonitor():
+    """Stores the outputs for a module."""
+    def __init__(self, module):
+        self.values = None
         self.hook_ref = module.register_forward_hook(self.hook)
 
     def hook(self, module, hook_in, hook_out):
-        self.objective = hook_out[0, self.index]
+        self.values = hook_out
+
+    def remove(self):
+        self.hook_ref.remove()
+
+class Linear():
+
+    def __init__(self, module, index):
+        self.index = index
+        self.monitor = ModuleMonitor(module)
+
+    @property
+    def objective(self):
+        if self.monitor.values is not None:
+            return self.monitor.values[0, self.index]
 
     def __del__(self):
-        self.hook_ref.remove()
+        self.monitor.remove()
 
 
 class ConvChannel():
 
     def __init__(self, module, channel, func=torch.mean):
-        self.objective = None
         self.channel = channel
-        self.hook_ref = module.register_forward_hook(self.hook)
         self.func = func
-        self.values = None
+        self.monitor = ModuleMonitor(module)
 
-    def hook(self, module, hook_in, hook_out):
-        target = hook_out[0, self.channel, :, :]
-        self.objective = self.func(target)
-        self.values = hook_out
+    @property
+    def objective(self):
+        if self.monitor.values is not None:
+            target_channel = self.monitor.values[0, self.channel, :, :]
+            return self.func(target_channel)
 
-    def remove(self):
-        self.hook_ref.remove()
+    def __del__(self):
+        self.monitor.remove()
 
 class Content():
 
