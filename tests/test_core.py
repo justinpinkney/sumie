@@ -62,10 +62,21 @@ def test_optimiser_output(tmpdir):
     n_iterations = 10
     
     opt = sumie.Optimiser()
-    opt.run(image, model, objective, iterations=n_iterations, output=tmpdir)
+    opt.run(image, model, objective, iterations=n_iterations, output=Path(tmpdir))
 
     search = str(tmpdir.join('*.jpg'))
-    print(search)
+    assert len(glob(search)) == 11
+    
+def test_optimiser_output_str(tmpdir):
+    """Save image to new folder of type string."""
+    model, objective, image = setup_optimiser()
+    n_iterations = 10
+    newFolder = 'tmp'
+    
+    opt = sumie.Optimiser()
+    opt.run(image, model, objective, iterations=n_iterations, output=newFolder)
+
+    search = newFolder + '/*.jpg'
     assert len(glob(search)) == 11
 
 # Utility functions

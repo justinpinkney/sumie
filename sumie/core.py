@@ -2,8 +2,10 @@ import torch
 import torchvision
 import numpy as np
 import PIL
+from tqdm import tqdm
 
 import math
+from pathlib import Path
 
 import sumie
 
@@ -97,10 +99,14 @@ class Optimiser():
     def __init__(self):
         self.history = []
 
-    def run(self, image, model, objective, iterations=256, lr=0.1, output=None):
+    def run(self, image, model, objective, iterations=256, lr=0.1, output=None, progress=False):
         optimiser = torch.optim.Adam(image.parameters(), lr=lr)
         
-        for i in range(iterations):
+        iterable = range(iterations)
+        if progress:
+            iterable = tqdm(iterable)
+        
+        for i in iterable:
             optimiser.zero_grad()
             model(image())
             loss = -objective.objective
@@ -118,7 +124,13 @@ class Optimiser():
         
     def _save_snapshot(self, output, image, i):
         # TODO track number of saved outputs instead of using iterations
-        filename = output.join(f"{i:06}.jpg")
+        if isinstance(output, str):
+            output = Path(output)
+            
+        if not output.is_dir():
+            output.mkdir()
+            
+        filename = output.joinpath(f"{i:06}.jpg")
         output_image = image.get_image().detach().cpu().numpy()
         jpg = PIL.Image.fromarray(np.uint8(255*np.squeeze(output_image.transpose((2, 3, 1, 0)))))
         jpg.save(str(filename))

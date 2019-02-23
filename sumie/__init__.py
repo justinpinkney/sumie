@@ -6,3 +6,4 @@ from . import transforms
 from . import io
 from . import vis
 from . import cppn
+from . import utils
