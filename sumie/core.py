@@ -98,9 +98,14 @@ class Optimiser():
     """Optimises an Image to some objective."""
     def __init__(self):
         self.history = []
+        self.callbacks = []
+        
+    def add_callback(self, func):
+        self.callbacks.append(func)
 
     def run(self, image, model, objective, iterations=256, lr=0.1, output=None, progress=False):
-        optimiser = torch.optim.Adam(image.parameters(), lr=lr)
+        optimiser = torch.optim.Adam(image.parameters(), lr=lr, weight_decay=1e-2)
+        self.objective = objective
         
         iterable = range(iterations)
         if progress:
@@ -109,16 +114,19 @@ class Optimiser():
         for i in iterable:
             optimiser.zero_grad()
             model(image())
-            loss = -objective.objective
-            self.history.append(objective.objective.detach().cpu())
+            loss = -self.objective.objective
+            self.history.append(self.objective.objective.detach().cpu())
             if output:
                 self._save_snapshot(output, image, i)
             loss.backward()
             optimiser.step()
+            if self.callbacks:
+                for func in self.callbacks:
+                    func(i, image, model, self.objective, self)
         
         # Run model one more time to get final loss
         model(image())
-        self.history.append(objective.objective.detach().cpu())
+        self.history.append(self.objective.objective.detach().cpu())
         if output:
             self._save_snapshot(output, image, i+1)
         
