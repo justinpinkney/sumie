@@ -28,9 +28,9 @@ class Image(torch.nn.Module):
 
         super(Image, self).__init__()
         if param == 'fft':
-            self.base_image = sumie.inputs.FftImage((size, size))
+            self.base_image = sumie.inputs.FftImage(size)
         elif param == 'rgb':
-            self.base_image = sumie.inputs.RgbImage((size, size))
+            self.base_image = sumie.inputs.RgbImage(size)
         elif param == 'cppn':
             self.base_image = sumie.cppn.cppn(size)
         if decorrelate:
