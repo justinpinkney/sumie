@@ -42,6 +42,16 @@ class ConvChannel():
 
     def __del__(self):
         self.monitor.remove()
+        
+class DeepDream():
+    
+    def __init__(self, module):
+        self.monitor = ModuleMonitor(module)
+        
+    @property
+    def objective(self):
+        if self.monitor.values is not None:
+            return self.monitor.values.norm()
 
 class Content():
 

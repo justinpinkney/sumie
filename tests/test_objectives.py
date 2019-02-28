@@ -28,3 +28,17 @@ def test_conv_custom_objective():
     model(input)
     assert objective.objective.data == 1
 
+def test_deep_dream():
+    """Deep dream objective should be the l2 norm of module."""
+    model = tests.utils.make_net()
+    objective = sumie.objectives.DeepDream(model[0])
+    input = torch.zeros(1, 3, 4, 4)
+    input[0, 0, 0, 0] = 1
+    model(input)
+    assert objective.objective.data == 1
+    
+    input[0, 0, 0, 0] = 2
+    input[0, 0, 2, 2] = 1
+    model(input)
+    assert objective.objective.data ** 2 == 5
+    
