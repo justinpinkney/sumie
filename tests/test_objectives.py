@@ -1,6 +1,7 @@
 import sumie
 import tests
 import torch
+import pytest
 
 def test_hook_add_remove():
     """Objective can remove its hook."""
@@ -42,3 +43,10 @@ def test_deep_dream():
     model(input)
     assert objective.objective.data ** 2 == 5
     
+def test_white():
+    """Objective to encourage the image to be white."""
+    image = sumie.inputs.RgbImage(10, noise=0)
+    objective = sumie.objectives.White(image)
+    image()
+    expected = (10*10*3*1) ** 0.5
+    assert pytest.approx(objective.objective.item(), 1e-6) == -expected

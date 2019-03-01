@@ -119,3 +119,14 @@ class Style():
         G = torch.mm(features, features.t())
 
         return G.div(a * b * c * d)
+
+class White():
+    
+    def __init__(self, image):
+        self.monitor = ModuleMonitor(image)
+        
+    @property
+    def objective(self):
+        if self.monitor.values is not None:
+            value = (self.monitor.values - 1).norm()
+            return -1*value
