@@ -1,6 +1,7 @@
 import sumie
 import tests
 import torch
+from collections import namedtuple
 
 def test_hook_add_remove():
     """Objective can remove its hook."""
@@ -28,3 +29,19 @@ def test_conv_custom_objective():
     model(input)
     assert objective.objective.data == 1
 
+def test_composite():
+    """Composite objective should add objectives with weights default to 1."""
+    child_objective = namedtuple('child_objective', ['objective'])
+    child1 = child_objective(1)
+    child2 = child_objective(3)
+    objective = sumie.objectives.Composite((child1, child2))
+    assert objective.objective == 4
+
+def test_composite_weights():
+    """Composite objective should add objectives with weights."""
+    child_objective = namedtuple('child_objective', ['objective'])
+    child1 = child_objective(1)
+    child2 = child_objective(3)
+    weights = [1/10, 1/30]
+    objective = sumie.objectives.Composite((child1, child2), weights=weights)
+    assert objective.objective == 2/10

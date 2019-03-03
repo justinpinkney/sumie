@@ -12,6 +12,23 @@ class ModuleMonitor():
     def remove(self):
         self.hook_ref.remove()
 
+class Composite():
+    """Adds objectives with optional weighting."""
+
+    def __init__(self, children, weights=None):
+        self.children = children
+        if weights:
+            self.weights = weights
+        else:
+            self.weights = [1 for el in self.children]
+        
+    @property
+    def objective(self):
+        total = 0
+        for child, weight in zip(self.children, self.weights):
+            total += weight*child.objective
+        return total
+
 class Linear():
 
     def __init__(self, module, index):
