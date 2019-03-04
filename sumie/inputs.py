@@ -35,9 +35,11 @@ def rfft2d_freqs(h, w):
 
 class FftImage(torch.nn.Module):
 
-    def __init__(self, shape, decay_power=1):
+    def __init__(self, size, decay_power=1):
       super(FftImage, self).__init__()
-      h, w = shape
+      if not isinstance(size, tuple):
+          size = (size, size)
+      h, w = size
       freqs = rfft2d_freqs(h, w)
       init_val_size = (3,) + freqs.shape + (2,)
 

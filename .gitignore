@@ -6,3 +6,5 @@ venv/
 .coverage
 coverage.xml
 .vscode/
+*.mp4
+tmp/
