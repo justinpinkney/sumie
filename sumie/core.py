@@ -96,41 +96,47 @@ class DecorrelateColours(torch.nn.Module):
 
 class Optimiser():
     """Optimises an Image to some objective."""
-    def __init__(self):
+    def __init__(self, image, model, objective):
         self.history = []
         self.callbacks = []
+        self.image = image
+        self.model = model
+        self.objective = objective
         
     def add_callback(self, func):
         self.callbacks.append(func)
 
-    def run(self, image, model, objective, iterations=256, lr=0.1, output=None, progress=False):
-        optimiser = torch.optim.Adam(image.parameters(), lr=lr, weight_decay=1e-2)
-        self.objective = objective
+    def run(self, iterations=256, lr=0.1, output=None, progress=False):
+        self.optimiser = torch.optim.Adam(self.image.parameters(),
+                                          lr=lr,
+                                          weight_decay=1e-2)
         
         iterable = range(iterations)
         if progress:
             iterable = tqdm(iterable)
         
         for i in iterable:
-            optimiser.zero_grad()
-            model(image())
+            self.optimiser.zero_grad()
+            self.model(self.image())
             loss = -self.objective.objective
-            self.history.append(self.objective.objective.detach().cpu())
+            self._add_history()
+
             if output:
-                self._save_snapshot(output, image, i)
+                self._save_snapshot(output, i)
+
             loss.backward()
-            optimiser.step()
+            self.optimiser.step()
             if self.callbacks:
                 for func in self.callbacks:
-                    func(i, image, model, self.objective, self)
+                    func(self, i)
         
         # Run model one more time to get final loss
-        model(image())
-        self.history.append(self.objective.objective.detach().cpu())
+        self.model(self.image())
+        self._add_history()
         if output:
-            self._save_snapshot(output, image, i+1)
+            self._save_snapshot(output, i+1)
         
-    def _save_snapshot(self, output, image, i):
+    def _save_snapshot(self, output, i):
         # TODO track number of saved outputs instead of using iterations
         if isinstance(output, str):
             output = Path(output)
@@ -139,6 +145,9 @@ class Optimiser():
             output.mkdir()
             
         filename = output.joinpath(f"{i:06}.jpg")
-        output_image = image.get_image().detach().cpu().numpy()
+        output_image = self.image.get_image().detach().cpu().numpy()
         jpg = PIL.Image.fromarray(np.uint8(255*np.squeeze(output_image.transpose((2, 3, 1, 0)))))
         jpg.save(str(filename))
+
+    def _add_history(self):
+        self.history.append(self.objective.objective.detach().cpu())

@@ -36,8 +36,8 @@ def test_optimiser():
     model, objective, image = setup_optimiser()
     original_image, start_value = get_state(model, image, objective)
     
-    opt = sumie.Optimiser()
-    opt.run(image, model, objective, iterations=10)
+    opt = sumie.Optimiser(image, model, objective)
+    opt.run(iterations=10)
     
     new_image, end_value = get_state(model, image, objective)
     assert torch.any(new_image != original_image)
@@ -48,8 +48,8 @@ def test_optimiser_history():
     model, objective, image = setup_optimiser()
     n_iterations = 10
     
-    opt = sumie.Optimiser()
-    opt.run(image, model, objective, iterations=n_iterations)
+    opt = sumie.Optimiser(image, model, objective)
+    opt.run(iterations=10)
     new_image, end_value = get_state(model, image, objective)
 
     # +1 as we get the initial and final losses
@@ -61,8 +61,8 @@ def test_optimiser_output(tmpdir):
     model, objective, image = setup_optimiser()
     n_iterations = 10
     
-    opt = sumie.Optimiser()
-    opt.run(image, model, objective, iterations=n_iterations, output=Path(tmpdir))
+    opt = sumie.Optimiser(image, model, objective)
+    opt.run(iterations=10, output=Path(tmpdir))
 
     search = str(tmpdir.join('*.jpg'))
     assert len(glob(search)) == 11
@@ -71,12 +71,12 @@ def test_optimiser_output_str(tmpdir):
     """Save image to new folder of type string."""
     model, objective, image = setup_optimiser()
     n_iterations = 10
-    newFolder = 'tmp'
+    new_folder = 'tmp'
     
-    opt = sumie.Optimiser()
-    opt.run(image, model, objective, iterations=n_iterations, output=newFolder)
+    opt = sumie.Optimiser(image, model, objective)
+    opt.run(iterations=10, output=new_folder)
 
-    search = newFolder + '/*.jpg'
+    search = new_folder + '/*.jpg'
     assert len(glob(search)) == 11
 
 # Utility functions
