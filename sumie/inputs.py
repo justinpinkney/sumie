@@ -60,3 +60,7 @@ class FftImage(torch.nn.Module):
       scaled_spectrum_t = self.scale_const*self.pixels
       image_t = torch.irfft(scaled_spectrum_t, 2)
       return image_t[None, :, :self.h, :self.w]/4
+
+    def set_pixels(self, pixels):
+        new_data = torch.rfft(pixels*4, 2).squeeze(0)/self.scale_const
+        self.pixels.data = new_data
