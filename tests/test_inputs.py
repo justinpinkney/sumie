@@ -29,7 +29,7 @@ def test_zeros_rgb():
 
 def test_fft_set():
     """Set the pixels of fft image"""
-    tolerance = 0.11
+    tolerance = 1e-10
     size = 120
     image = sumie.inputs.FftImage(size)
     
@@ -44,3 +44,15 @@ def test_fft_set():
     image.set_pixels(target)
     
     assert torch.nn.functional.mse_loss(image(), target).item() < tolerance
+    
+def test_fft_set_identity():
+    """Set the image shouldn't change if we set the original pixels"""
+    tolerance = 1e-10
+    size = 121
+    image = sumie.inputs.FftImage(size)
+    original = image().detach()
+    
+    # Set to zeros
+    image.set_pixels(original)
+    
+    assert torch.nn.functional.mse_loss(image(), original).item() < tolerance

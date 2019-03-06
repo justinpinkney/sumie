@@ -62,5 +62,9 @@ class FftImage(torch.nn.Module):
       return image_t[None, :, :self.h, :self.w]/4
 
     def set_pixels(self, pixels):
-        new_data = torch.rfft(pixels*4, 2).squeeze(0)/self.scale_const
+        input_size = pixels.shape
+        target_size = self.pixels.shape
+        pad = (0, target_size[2]*2 - input_size[3] - 1, 0, 0, 0, 0)
+        padded_input = torch.nn.functional.pad(pixels*4, pad)
+        new_data = torch.rfft(padded_input, 2).squeeze(0)/self.scale_const
         self.pixels.data = new_data
