@@ -106,11 +106,11 @@ class Optimiser():
     def add_callback(self, func):
         self.callbacks.append(func)
 
-    def run(self, iterations=256, lr=0.1, output=None, progress=False):
+    def run(self, iterations=256, lr=0.1, output=None, output_skip=1, progress=False):
         self.optimiser = torch.optim.Adam(self.image.parameters(),
-                                          lr=lr,
-                                          weight_decay=1e-2)
+                                          lr=lr)
         
+        # TODO replace output_skip with writer callback
         iterable = range(iterations)
         if progress:
             iterable = tqdm(iterable)
@@ -121,7 +121,7 @@ class Optimiser():
             loss = -self.objective.objective
             self._add_history()
 
-            if output:
+            if output and not i % output_skip:
                 self._save_snapshot(output, i)
 
             loss.backward()

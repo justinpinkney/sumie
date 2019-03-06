@@ -70,28 +70,27 @@ class DeepDream():
         if self.monitor.values is not None:
             return self.monitor.values.norm()
 
-class Content():
+def Content(image, model, module):
+    """Make a TargetActivations objective with the given image."""
+    monitor = ModuleMonitor(module)
+    model(image)
+    objective = TargetActivations(module, monitor.values.detach())
+    monitor.remove()
+    return objective
+        
+class TargetActivations():
+    """Minimise the distance bewteen a module activation and some target."""
 
-    def __init__(self, module, model, image):
-        self.objective = 0
-        hook_ref = module.register_forward_hook(self.init_hook)
-        model(image)
-        hook_ref.remove()
-
-        self.hook_ref = module.register_forward_hook(self.hook)
+    def __init__(self, module, target):
+        self.monitor = ModuleMonitor(module)
+        self.target = target
         self.criterion = torch.nn.MSELoss()
 
-    def init_hook(self, module, hook_in, hook_out):
-        self.target = hook_out.detach()
-        self.target_size = self.target.size()[2:]
-
-    def hook(self, module, hook_in, hook_out):
-        scaled_output = torch.nn.functional.interpolate(hook_output, size=self.target_size)
-        self.objective = self.criterion(scaled_output, self.target)
-
-    def remove(self):
-        self.hook_ref.remove()
-
+    @property
+    def objective(self):
+        if self.monitor.values is not None:
+            return -self.criterion(self.monitor.values, self.target)
+        
 class Style():
 
     def __init__(self, modules, model, image, weights=None):

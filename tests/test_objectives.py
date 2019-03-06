@@ -68,3 +68,19 @@ def test_composite_weights():
     weights = [1/10, 1/30]
     objective = sumie.objectives.Composite((child1, child2), weights=weights)
     assert objective.objective == 2/10
+    
+def test_content():
+    """Content loss aims to reproduce the activations exactly"""
+    model = tests.utils.make_net()
+    input = torch.zeros(1, 3, 4, 4)
+    input[0, 0, 0, 0] = 1
+    
+    objective = sumie.objectives.Content(input, model, model[1])
+    
+    model(input)
+    assert objective.objective.data == 0
+    
+    input[0, 0, 0, 0] = 2
+    input[0, 0, 2, 2] = 1
+    model(input)
+    assert objective.objective.data == -2/6/6
