@@ -49,7 +49,7 @@ def test_white():
     image = sumie.inputs.RgbImage(10, noise=0)
     objective = sumie.objectives.White(image)
     image()
-    expected = (10*10*3*1) ** 0.5
+    expected = 1
     assert pytest.approx(objective.objective.item(), 1e-6) == -expected
 
 def test_composite():
@@ -84,3 +84,35 @@ def test_content():
     input[0, 0, 2, 2] = 1
     model(input)
     assert objective.objective.data == -2/6/6
+    
+def test_style_one_module():
+    """Style loss is mse of gram matrix for target"""
+    model = tests.utils.make_net()
+    input = torch.zeros(1, 3, 4, 4)
+    input[0, 0, 0, 0] = 1
+    
+    objective = sumie.objectives.Style(input, model, [model[1],])
+    
+    val = model(input)
+    gram1 = sumie.utils.gram_matrix(val)
+    assert objective.objective.data == 0
+    
+    input[0, 0, 0, 0] = 2
+    input[0, 0, 2, 2] = 1
+    val = model(input)
+    gram2 = sumie.utils.gram_matrix(val)
+    expected = (gram2 - gram1) ** 2
+    assert objective.objective.item() == -expected.item()
+    
+def test_style_multiple_modules():
+    model = tests.utils.make_net()
+    input = torch.zeros(1, 3, 4, 4)
+    input[0, 0, 0, 0] = 1
+    
+    objective = sumie.objectives.Style(input, model, model[0:2])
+    
+    model(input)
+    assert objective.objective.data == 0
+    
+    # TODO test multiple with actual values
+    

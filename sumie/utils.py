@@ -22,3 +22,10 @@ def remove_inplace(model):
         if hasattr(child, 'inplace'):
             child.inplace = False
 
+
+def gram_matrix(input):
+    """Compute the gram matrix of an input."""
+    a, b, c, d = input.size()
+    features = input.view(a * b, c * d)
+    G = torch.mm(features, features.t())
+    return G.div(a * b * c * d)

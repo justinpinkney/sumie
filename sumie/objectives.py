@@ -1,5 +1,7 @@
 import torch
 
+import sumie
+
 class ModuleMonitor():
     """Stores the outputs for a module."""
     def __init__(self, module):
@@ -81,61 +83,48 @@ def Content(image, model, module):
 class TargetActivations():
     """Minimise the distance bewteen a module activation and some target."""
 
-    def __init__(self, module, target):
+    def __init__(self, module, target, func=None):
         self.monitor = ModuleMonitor(module)
         self.target = target
         self.criterion = torch.nn.MSELoss()
+        self.func = func
 
     @property
     def objective(self):
-        if self.monitor.values is not None:
-            return -self.criterion(self.monitor.values, self.target)
+        value = self.monitor.values
+        if value is not None:
+            if self.func:
+                value = self.func(value)
+            return -self.criterion(value, self.target)
         
 class Style():
-
-    def __init__(self, modules, model, image, weights=None):
-        hook_ref = dict()
-        self.target = dict()
+    def __init__(self, image, model, modules, weights=None):
         self.weights = weights
-        self.objective = 0
+        self.monitors = []
+        self.objectives = []
+        
         for module in modules:
-            hook_ref[module] = module.register_forward_hook(self.init_hook)
+            self.monitors.append(ModuleMonitor(module))
+            
         model(image)
-        for module in modules:
-            hook_ref[module].remove()
+        for monitor, module in zip(self.monitors, modules):
+            target = sumie.utils.gram_matrix(monitor.values.detach())
+            objective = TargetActivations(module, target, func=sumie.utils.gram_matrix)
+            self.objectives.append(objective)
+        
+        for monitor in self.monitors:
+            monitor.remove()
 
-        self.hook_ref = dict()
-        for idx, module in enumerate(modules):
-            self.hook_ref[module] = module.register_forward_hook(lambda a, b, c, this_idx=idx: self.hook(a, b, c, this_idx))
-
-        self.criterion = torch.nn.MSELoss()
-
-    def init_hook(self, module, hook_in, hook_out):
-        target = hook_out.detach()
-        self.target[module] = self.gram_matrix(target)
-
-    def hook(self, module, hook_in, hook_out, idx):
-        output = hook_out
-        if self.weights:
-            weight = self.weights[idx]
-        else:
-            weight = 1
-        if idx == 0:
-            self.objective = 0
-        this_contribution = weight*self.criterion(self.gram_matrix(output), self.target[module])
-        self.objective += this_contribution
-
-    def __del__(self):
-        for hook_ref in self.hook_ref.values():
-            hook_ref.remove()
-
-    def gram_matrix(self, input):
-        a, b, c, d = input.size()
-        features = input.view(a * b, c * d)
-        G = torch.mm(features, features.t())
-
-        return G.div(a * b * c * d)
-
+    @property
+    def objective(self):
+        value = 0
+        for objective in self.objectives:
+            if objective.objective is None:
+                return None
+            
+            value += objective.objective
+        return value
+    
 class White():
     
     def __init__(self, image):
@@ -144,5 +133,4 @@ class White():
     @property
     def objective(self):
         if self.monitor.values is not None:
-            value = (self.monitor.values - 1).norm()
-            return -1*value
+            return (self.monitor.values - 1).mean()
