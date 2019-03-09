@@ -23,7 +23,7 @@ class Composite():
             self.weights = weights
         else:
             self.weights = [1 for el in self.children]
-        
+
     @property
     def objective(self):
         total = 0
@@ -96,7 +96,28 @@ class TargetActivations():
             if self.func:
                 value = self.func(value)
             return -self.criterion(value, self.target)
-        
+
+class BatchMatchActivations():
+    """Compares activations between two images in a batch"""
+
+    def __init__(self, module, batch_idx_1, batch_idx_2, func=None):
+        self.monitor = ModuleMonitor(module)
+        self.batch_idx_1 = batch_idx_1
+        self.batch_idx_2 = batch_idx_2
+        self.criterion = torch.nn.MSELoss()
+        self.func = func
+
+    @property
+    def objective(self):
+        values = self.monitor.values
+        if values is not None:
+            value1 = values[self.batch_idx_1, ...]
+            value2 = values[self.batch_idx_2, ...]
+            if self.func:
+                value1 = self.func(value1)
+                value2 = self.func(value2)
+            return -self.criterion(value1, value2)
+
 class Style():
     def __init__(self, image, model, modules, weights=None):
         self.weights = weights
