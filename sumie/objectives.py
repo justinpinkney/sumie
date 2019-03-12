@@ -48,15 +48,16 @@ class Linear():
 
 class ConvChannel():
 
-    def __init__(self, module, channel, func=torch.mean):
+    def __init__(self, module, channel, func=torch.mean, batch=0):
         self.channel = channel
         self.func = func
         self.monitor = ModuleMonitor(module)
+        self.batch = batch
 
     @property
     def objective(self):
         if self.monitor.values is not None:
-            target_channel = self.monitor.values[0, self.channel, :, :]
+            target_channel = self.monitor.values[self.batch, self.channel, :, :]
             return self.func(target_channel)
 
     def __del__(self):
