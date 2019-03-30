@@ -141,13 +141,8 @@ class Optimiser():
         if isinstance(output, str):
             output = Path(output)
             
-        if not output.is_dir():
-            output.mkdir()
-            
         filename = output.joinpath(f"{i:06}.jpg")
-        output_image = self.image.get_image().detach().cpu().numpy()
-        jpg = PIL.Image.fromarray(np.uint8(255*np.squeeze(output_image.transpose((2, 3, 1, 0)))))
-        jpg.save(str(filename))
+        sumie.io.save(self.image.get_image(), filename)
 
     def _add_history(self):
         self.history.append(self.objective.objective.detach().cpu())
