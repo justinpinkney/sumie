@@ -1,5 +1,6 @@
 import torch
 import sumie
+import math
 
 def test_position_jitter_size():
     """Get the same size out as in."""
@@ -42,3 +43,13 @@ def test_interpolate_size():
         out = transform(image)
 
         assert out.size() == (1, 3) + expected_size
+
+def test_rotate_jitter():
+    """Rotation jitter should rotate image but preserve size."""
+        
+    transform = sumie.transforms.RotationJitter(1)
+    image = torch.randn(1, 3, 10, 10)
+    out = transform(image)
+
+    assert torch.all(out != image)
+    assert out.shape == image.shape

@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import math
 
 class PositionJitter(torch.nn.Module):
     """Shifts and image in the x and y direction by a random amount.
@@ -94,3 +95,18 @@ class Interpolate(torch.nn.Module):
 
     def forward(self, x):
         return self.interp(x, scale_factor=self.factor, mode='bilinear')
+
+class RotationJitter(torch.nn.Module):
+    """Applies random rotation."""
+
+    def __init__(self, amount):
+        super(RotationJitter, self).__init__()
+        self.amount = amount
+
+    def forward(self, image):
+        rotation = 2*self.amount*(np.random.rand(1)-0.5)
+        values = np.array([[ math.cos(rotation), math.sin(rotation), 0],
+             [-math.sin(rotation), math.cos(rotation), 0]])
+        affine = torch.Tensor(values.astype(np.float)).unsqueeze(0).to(image.device)
+        grid = torch.nn.functional.affine_grid(affine, image.size())
+        return torch.nn.functional.grid_sample(image, grid)
