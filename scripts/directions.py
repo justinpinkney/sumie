@@ -2,7 +2,7 @@ import sumie
 import torch
 import torchvision
 
-model = torchvision.models.vgg16(pretrained=True).eval()
+model = torchvision.models.densenet121(pretrained=True).eval()
 sumie.utils.remove_inplace(model)
 
 def normalise(image):
@@ -35,25 +35,18 @@ def direction_func(x, y):
     return torch.mean(xy_dot * cossims**cossim_pow)
 
 def change_scale(opt, i):
-    opt.image.transforms[-2].factor *= 1.01
+    opt.image.transforms[-2].factor *= 1.0045
 
-url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Piper_betle_plant.jpg/320px-Piper_betle_plant.jpg'
-imsize = 512
-
-device = 'cuda'
-model.to(device)
-base_image = sumie.io.load_url(url, size=(imsize, imsize))
-base_image = normalise(base_image)
-
-for selected_module in model.features.children():
+def run(base_image, selected_module):
+    device = 'cuda'
     monitor = sumie.objectives.ModuleMonitor(selected_module)
-    model.features(base_image.to(device))
+    model(base_image.to(device))
     target = monitor.values
 
     im = sumie.Image(imsize, param='fft', transforms=[
                         sumie.transforms.PositionJitter(8),
                         sumie.transforms.ScaleJitter(1.01),
-                        sumie.transforms.RotationJitter(1),
+                        sumie.transforms.RotationJitter(0.1),
                         sumie.transforms.PositionJitter(8),
                         sumie.transforms.Interpolate(0.1),
                         sumie.transforms.Normalise(),
@@ -63,9 +56,26 @@ for selected_module in model.features.children():
 
     content = Direction(selected_module, target.detach())
 
-    opt = sumie.Optimiser(im, model.features, content)
+    opt = sumie.Optimiser(im, model, content)
     opt.add_callback(change_scale)
-    opt.run(iterations=256, lr=0.05, progress=True)
-    sumie.io.save(im.get_image(), f'tmp/output_{selected_module}.png')
+    opt.run(iterations=512, lr=0.05, progress=True)
+    return im.get_image()
 
+if __name__ == '__main__':
+    url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Piper_betle_plant.jpg/320px-Piper_betle_plant.jpg'
+    imsize = 256
+
+    device = 'cuda'
+    model.to(device)
+    base_image = sumie.io.load_url(url, size=(imsize, imsize))
+    base_image = normalise(base_image)
+
+    for i, selected_module in enumerate(model.modules()):
+        try:
+            im_out = run(base_image, selected_module)
+            sumie.io.save(im_out, f'tmp/output_{i:03}.png')
+
+        except Exception as e:
+            print(f'failed on {selected_module}')
+            print(e)
 
