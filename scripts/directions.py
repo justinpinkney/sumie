@@ -5,12 +5,6 @@ import torchvision
 model = torchvision.models.densenet121(pretrained=True).eval()
 sumie.utils.remove_inplace(model)
 
-def normalise(image):
-    
-    mean = torch.as_tensor([0.485, 0.456, 0.406])
-    std = torch.as_tensor([0.229, 0.224, 0.225])
-    return (image - mean[None,:,None,None]) /std[None,:,None,None]
- 
 class Direction():
     
     def __init__(self, module, target):
@@ -37,11 +31,8 @@ def direction_func(x, y):
 def change_scale(opt, i):
     opt.image.transforms[-2].factor *= 1.0045
 
-def run(base_image, selected_module):
+def run(target, selected_module, average=True):
     device = 'cuda'
-    monitor = sumie.objectives.ModuleMonitor(selected_module)
-    model(base_image.to(device))
-    target = monitor.values
 
     im = sumie.Image(imsize, param='fft', transforms=[
                         sumie.transforms.PositionJitter(8),
@@ -62,18 +53,35 @@ def run(base_image, selected_module):
     return im.get_image()
 
 if __name__ == '__main__':
-    url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Piper_betle_plant.jpg/320px-Piper_betle_plant.jpg'
+    #url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Piper_betle_plant.jpg/320px-Piper_betle_plant.jpg'
+    url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Hyams_beach.jpg/640px-Hyams_beach.jpg'
     imsize = 256
+    average = False
 
     device = 'cuda'
     model.to(device)
     base_image = sumie.io.load_url(url, size=(imsize, imsize))
-    base_image = normalise(base_image)
+    base_image = sumie.utils.normalise(base_image)
 
     for i, selected_module in enumerate(model.modules()):
+        if i != 187:
+            continue
         try:
-            im_out = run(base_image, selected_module)
-            sumie.io.save(im_out, f'tmp/output_{i:03}.png')
+
+            monitor = sumie.objectives.ModuleMonitor(selected_module)
+            model(base_image.to(device))
+            all_target = monitor.values
+            if average:
+                im_out = run(all_target, selected_module)
+                sumie.io.save(im_out, f'tmp/output_{i:03}.png')
+            else:
+                size = all_target.shape
+                for x in range(size[2]):
+                    for y in range(size[3]):
+                        target = all_target[0,:,x,y]
+                        target = target[None,:,None,None]
+                        im_out = run(target, selected_module)
+                        sumie.io.save(im_out, f'tmp/output_{i:03}_{x:03}_{y:03}.png')
 
         except Exception as e:
             print(f'failed on {selected_module}')

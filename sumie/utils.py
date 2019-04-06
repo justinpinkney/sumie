@@ -29,3 +29,10 @@ def gram_matrix(input):
     features = input.view(a * b, c * d)
     G = torch.mm(features, features.t())
     return G.div(a * b * c * d)
+
+
+def normalise(image):
+    """Apply imagenet normalisation."""   
+    mean = torch.as_tensor([0.485, 0.456, 0.406]).to(image.device)
+    std = torch.as_tensor([0.229, 0.224, 0.225]).to(image.device)
+    return (image - mean[None,:,None,None]) /std[None,:,None,None]
