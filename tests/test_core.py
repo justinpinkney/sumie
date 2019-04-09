@@ -31,9 +31,9 @@ def test_image_init_cppn():
     difference = torch.abs(output_image - init_image)
     assert torch.nn.functional.mse_loss(output_image, init_image) < 1e-3
     
-def test_optimiser():
+def test_optimiser(simple_net):
     """Optimiser class optimises an image given an objective."""
-    model, objective, image = setup_optimiser()
+    model, objective, image = setup_optimiser(simple_net)
     original_image, start_value = get_state(model, image, objective)
     
     opt = sumie.Optimiser(image, model, objective)
@@ -43,9 +43,9 @@ def test_optimiser():
     assert torch.any(new_image != original_image)
     assert end_value > start_value
 
-def test_optimiser_history():
+def test_optimiser_history(simple_net):
     """Optimiser stores objective history."""
-    model, objective, image = setup_optimiser()
+    model, objective, image = setup_optimiser(simple_net)
     n_iterations = 10
     
     opt = sumie.Optimiser(image, model, objective)
@@ -56,9 +56,9 @@ def test_optimiser_history():
     assert len(opt.history) == n_iterations + 1
     assert opt.history[-1] == end_value
 
-def test_optimiser_output(tmpdir):
+def test_optimiser_output(tmpdir, simple_net):
     """Save image per iteration of the optimiser."""
-    model, objective, image = setup_optimiser()
+    model, objective, image = setup_optimiser(simple_net)
     n_iterations = 10
     
     opt = sumie.Optimiser(image, model, objective)
@@ -67,9 +67,9 @@ def test_optimiser_output(tmpdir):
     search = str(tmpdir.join('*.jpg'))
     assert len(glob(search)) == 11
     
-def test_optimiser_output_str(tmpdir):
+def test_optimiser_output_str(tmpdir, simple_net):
     """Save image to new folder of type string."""
-    model, objective, image = setup_optimiser()
+    model, objective, image = setup_optimiser(simple_net)
     n_iterations = 10
     new_folder = 'tmp'
     
@@ -85,8 +85,7 @@ def get_state(model, image, objective):
     model(image())
     return image.get_image(), objective.objective
 
-def setup_optimiser():
-    model = tests.utils.make_net()
+def setup_optimiser(model):
     objective = sumie.objectives.ConvChannel(model[0], 0)
     image = sumie.Image(10)
     

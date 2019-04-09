@@ -4,44 +4,40 @@ import torch
 import pytest
 from collections import namedtuple
 
-def test_hook_add_remove():
+def test_hook_add_remove(simple_net):
     """Objective can remove its hook."""
-    model = tests.utils.make_net()
-    objective = sumie.objectives.ConvChannel(model[0], 1)
-    assert len(model[0]._forward_hooks) == 1
+    objective = sumie.objectives.ConvChannel(simple_net[0], 1)
+    assert len(simple_net[0]._forward_hooks) == 1
     del objective
-    assert len(model[0]._forward_hooks) == 0
+    assert len(simple_net[0]._forward_hooks) == 0
 
-def test_conv_objective():
+def test_conv_objective(simple_net):
     """Conv objective gets mean value of channel by default."""
-    model = tests.utils.make_net()
-    objective = sumie.objectives.ConvChannel(model[0], 0)
+    objective = sumie.objectives.ConvChannel(simple_net[0], 0)
     input = torch.zeros(1, 3, 4, 4)
     input[0, 0, 0, 0] = 1
-    model(input)
+    simple_net(input)
     assert objective.objective.data == 1/16
 
-def test_conv_custom_objective():
+def test_conv_custom_objective(simple_net):
     """Allow changing of the reduction function of conv channel"""
-    model = tests.utils.make_net()
-    objective = sumie.objectives.ConvChannel(model[0], 0, torch.max)
+    objective = sumie.objectives.ConvChannel(simple_net[0], 0, torch.max)
     input = torch.zeros(1, 3, 4, 4)
     input[0, 0, 0, 0] = 1
-    model(input)
+    simple_net(input)
     assert objective.objective.data == 1
 
-def test_deep_dream():
+def test_deep_dream(simple_net):
     """Deep dream objective should be the l2 norm of module."""
-    model = tests.utils.make_net()
-    objective = sumie.objectives.DeepDream(model[0])
+    objective = sumie.objectives.DeepDream(simple_net[0])
     input = torch.zeros(1, 3, 4, 4)
     input[0, 0, 0, 0] = 1
-    model(input)
+    simple_net(input)
     assert objective.objective.data == 1
     
     input[0, 0, 0, 0] = 2
     input[0, 0, 2, 2] = 1
-    model(input)
+    simple_net(input)
     assert objective.objective.data ** 2 == 5
     
 def test_white():
@@ -69,49 +65,46 @@ def test_composite_weights():
     objective = sumie.objectives.Composite((child1, child2), weights=weights)
     assert objective.objective == 2/10
     
-def test_content():
+def test_content(simple_net):
     """Content loss aims to reproduce the activations exactly"""
-    model = tests.utils.make_net()
     input = torch.zeros(1, 3, 4, 4)
     input[0, 0, 0, 0] = 1
     
-    objective = sumie.objectives.Content(input, model, model[1])
+    objective = sumie.objectives.Content(input, simple_net, simple_net[1])
     
-    model(input)
+    simple_net(input)
     assert objective.objective.data == 0
     
     input[0, 0, 0, 0] = 2
     input[0, 0, 2, 2] = 1
-    model(input)
+    simple_net(input)
     assert objective.objective.data == -2/6/6
     
-def test_style_one_module():
+def test_style_one_module(simple_net):
     """Style loss is mse of gram matrix for target"""
-    model = tests.utils.make_net()
     input = torch.zeros(1, 3, 4, 4)
     input[0, 0, 0, 0] = 1
     
-    objective = sumie.objectives.Style(input, model, [model[1],])
+    objective = sumie.objectives.Style(input, simple_net, [simple_net[1],])
     
-    val = model(input)
+    val = simple_net(input)
     gram1 = sumie.utils.gram_matrix(val)
     assert objective.objective.data == 0
     
     input[0, 0, 0, 0] = 2
     input[0, 0, 2, 2] = 1
-    val = model(input)
+    val = simple_net(input)
     gram2 = sumie.utils.gram_matrix(val)
     expected = (gram2 - gram1) ** 2
     assert objective.objective.item() == -expected.item()
     
-def test_style_multiple_modules():
-    model = tests.utils.make_net()
+def test_style_multiple_modules(simple_net):
     input = torch.zeros(1, 3, 4, 4)
     input[0, 0, 0, 0] = 1
     
-    objective = sumie.objectives.Style(input, model, model[0:2])
+    objective = sumie.objectives.Style(input, simple_net, simple_net[0:2])
     
-    model(input)
+    simple_net(input)
     assert objective.objective.data == 0
     
     # TODO test multiple with actual values

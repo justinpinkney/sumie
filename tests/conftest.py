@@ -1,4 +1,9 @@
 import torch
+import pytest
+
+@pytest.fixture
+def simple_net():
+    return make_net()
 
 def make_net(weights='fixed'):
     model = torch.nn.Sequential(
