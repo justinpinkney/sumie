@@ -8,7 +8,7 @@ def show(t, figsize=(5,5)):
     """
     
     no_batch = t.detach().cpu().squeeze(0)
-    im = no_batch.permute(2,1,0)
+    im = no_batch.permute(1, 2, 0)
     
     fig = plt.figure(figsize=figsize)
     ax = plt.axes()
