@@ -102,13 +102,15 @@ class Optimiser():
         self.image = image
         self.model = model
         self.objective = objective
+        self.optimiser = torch.optim.Adam(self.image.parameters(), lr=0.05)
+        self.snapshot_count = 0
+        
         
     def add_callback(self, func):
         self.callbacks.append(func)
 
-    def run(self, iterations=256, lr=0.1, output=None, output_skip=1, progress=False):
-        self.optimiser = torch.optim.Adam(self.image.parameters(),
-                                          lr=lr)
+    def run(self, iterations=256, lr=0.05, output=None, output_skip=1, progress=False):
+        self.optimiser.lr = lr
         
         # TODO replace output_skip with writer callback
         iterable = range(iterations)
@@ -122,7 +124,7 @@ class Optimiser():
             self._add_history()
 
             if output and not i % output_skip:
-                self._save_snapshot(output, i)
+                self._save_snapshot(output)
 
             loss.backward()
             self.optimiser.step()
@@ -134,15 +136,16 @@ class Optimiser():
         self.model(self.image())
         self._add_history()
         if output:
-            self._save_snapshot(output, i+1)
+            self._save_snapshot(output)
         
-    def _save_snapshot(self, output, i):
+    def _save_snapshot(self, output):
         # TODO track number of saved outputs instead of using iterations
         if isinstance(output, str):
             output = Path(output)
             
-        filename = output.joinpath(f"{i:06}.jpg")
+        filename = output.joinpath(f"{self.snapshot_count:06}.jpg")
         sumie.io.save(self.image.get_image(), filename)
+        self.snapshot_count += 1
 
     def _add_history(self):
         self.history.append(self.objective.objective.detach().cpu())

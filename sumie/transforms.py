@@ -88,12 +88,23 @@ class Normalise(torch.nn.Module):
 class Interpolate(torch.nn.Module):
     """Interpolates and image by a factor."""
 
-    def __init__(self, factor):
+    def __init__(self, factor, prefilter=0):
         super(Interpolate, self).__init__()
         self.interp = torch.nn.functional.interpolate
         self.factor = factor
+        self.prefilter = prefilter
 
     def forward(self, x):
+        
+        if self.prefilter:
+            pool_size = 11
+
+            pre_filt = torch.nn.AvgPool2d(pool_size, stride=1, padding=pool_size//2)
+            for i in range(self.prefilter):
+                x = pre_filt(x)
+        m = torch.nn.functional.interpolate(x, scale_factor=0.1)
+        
+        
         return self.interp(x, scale_factor=self.factor, mode='bilinear')
 
 class RotationJitter(torch.nn.Module):
