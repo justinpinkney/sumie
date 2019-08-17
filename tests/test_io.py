@@ -9,7 +9,8 @@ def test_im_file():
     filename = Path(__file__).with_name("tree.jpg")
     image = sumie.io.load_file(filename)
 
-    assert image.size() == (1, 3, 296, 221)
+    # Images in pytorch are batch, c, h, w
+    assert image.size() == (1, 3, 221, 296)
     assert torch.all(image <= 1)
     assert torch.all(image >= 0)
 
