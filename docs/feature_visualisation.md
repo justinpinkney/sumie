@@ -1,3 +1,5 @@
+__Out of date__
+
 # Feature visualisation
 
 Sumie ls a library that provides ways of producing visualisation through optimisation for a particular response form a neural network. The classic example of this is to produce an image that maximally activates a particular part of a network, as a way of visualising what features it has learnt.
