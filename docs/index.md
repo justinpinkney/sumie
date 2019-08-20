@@ -1,17 +1,5 @@
-# Welcome to MkDocs
+# Sumie
 
-For full documentation visit [mkdocs.org](https://mkdocs.org).
+_A library for image optimisation_
 
-## Commands
-
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs help` - Print this help message.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+PyTorch based library for optimising images for neural networks.
