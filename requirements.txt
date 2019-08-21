@@ -6,3 +6,4 @@ pillow
 scikit-image
 requests
 tqdm
+jupyter

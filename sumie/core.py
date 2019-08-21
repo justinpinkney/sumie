@@ -2,7 +2,7 @@ import torch
 import torchvision
 import numpy as np
 import PIL
-from tqdm import tqdm
+from  tqdm.auto import tqdm
 
 import math
 from pathlib import Path
