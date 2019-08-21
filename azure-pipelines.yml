@@ -34,8 +34,9 @@ jobs:
   - script: |
       for file in ./docs/*.ipynb
       do
-        jupyter nbconvert --execute "$file"
+        jupyter nbconvert --execute --ExecutePreprocessor.timeout=600 "$file"
       done
+    displayName: 'Run notebooks'
 
   - task: PublishTestResults@2
     inputs:
