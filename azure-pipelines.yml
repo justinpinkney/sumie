@@ -3,9 +3,6 @@
 # Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
-trigger:
-- master
-
 jobs:
 
 - job: 'Test'
@@ -33,6 +30,12 @@ jobs:
       pip install pytest pytest-cov
       pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=sumie/ --cov-report=xml
     displayName: 'pytest'
+
+  - script: |
+      for file in ./docs/*.ipynb
+      do
+        jupyter nbconvert --execute "$file"
+      done
 
   - task: PublishTestResults@2
     inputs:
