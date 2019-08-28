@@ -33,6 +33,9 @@ class Image(torch.nn.Module):
             self.base_image = sumie.inputs.RgbImage(size)
         elif param == 'cppn':
             self.base_image = sumie.cppn.cppn(size)
+        elif param == 'pyramid':
+            self.base_image = sumie.inputs.PyramidImage(size)
+
         if decorrelate:
             self.decorrelation = DecorrelateColours()
         else:

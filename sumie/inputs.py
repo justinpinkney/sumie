@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 import numpy as np
 
 import math
@@ -68,3 +69,29 @@ class FftImage(torch.nn.Module):
         padded_input = torch.nn.functional.pad(pixels*4, pad)
         new_data = torch.rfft(padded_input, 2).squeeze(0)/self.scale_const
         self.pixels.data = new_data
+
+class PyramidImage(torch.nn.Module):
+    """Pyramid of different resolution images."""
+
+    def __init__(self, size, noise=0.01, levels=4):
+        super(PyramidImage, self).__init__()
+        if not isinstance(size, tuple):
+            size = (size, size)
+
+        self.pixels = torch.nn.ParameterList()
+        for level in range(levels):
+            this_size = (x//(2**level) for x in size)
+            level_pixels = noise*torch.randn(1, 3, *this_size)
+            self.pixels.append(torch.nn.Parameter(level_pixels))
+
+        self.size = size
+
+    def forward(self):
+        output = torch.zeros(1, 3, *self.size)
+        for level in self.pixels:
+            output += F.interpolate(level, 
+                                    size=self.size,
+                                    mode='bilinear', 
+                                    align_corners=False)
+        return output
+
