@@ -26,6 +26,8 @@ class RgbImage(torch.nn.Module):
         return self.pixels
 
 # FFT stuff just like in lucid: https://github.com/tensorflow/lucid
+
+
 def rfft2d_freqs(h, w):
     """Computes 2D spectrum frequencies."""
 
@@ -37,30 +39,30 @@ def rfft2d_freqs(h, w):
 class FftImage(torch.nn.Module):
 
     def __init__(self, size, decay_power=1):
-      super(FftImage, self).__init__()
-      if not isinstance(size, tuple):
-          size = (size, size)
-      h, w = size
-      freqs = rfft2d_freqs(h, w)
-      init_val_size = (3,) + freqs.shape + (2,)
+        super(FftImage, self).__init__()
+        if not isinstance(size, tuple):
+            size = (size, size)
+        h, w = size
+        freqs = rfft2d_freqs(h, w)
+        init_val_size = (3,) + freqs.shape + (2,)
 
-      # Create a random variable holding the actual 2D fourier coefficients
-      init_val = np.random.normal(size=init_val_size, scale=0.01)
-      self.pixels = torch.nn.Parameter(torch.Tensor(init_val))
+        # Create a random variable holding the actual 2D fourier coefficients
+        init_val = np.random.normal(size=init_val_size, scale=0.01)
+        self.pixels = torch.nn.Parameter(torch.Tensor(init_val))
 
-      # Scale the spectrum, see lucid
-      scale = 1.0 / np.maximum(freqs, 1.0 / max(w, h)) ** decay_power
-      scale *= np.sqrt(w * h)
-      scale = torch.from_numpy(scale)
-      self.scale = scale[None,:,:,None].float()
-      self.register_buffer('scale_const', self.scale)
-      self.w = w
-      self.h = h
+        # Scale the spectrum, see lucid
+        scale = 1.0 / np.maximum(freqs, 1.0 / max(w, h)) ** decay_power
+        scale *= np.sqrt(w * h)
+        scale = torch.from_numpy(scale)
+        self.scale = scale[None, :, :, None].float()
+        self.register_buffer('scale_const', self.scale)
+        self.w = w
+        self.h = h
 
     def forward(self):
-      scaled_spectrum_t = self.scale_const*self.pixels
-      image_t = torch.irfft(scaled_spectrum_t, 2)
-      return image_t[None, :, :self.h, :self.w]/4
+        scaled_spectrum_t = self.scale_const*self.pixels
+        image_t = torch.irfft(scaled_spectrum_t, 2)
+        return image_t[None, :, :self.h, :self.w]/4
 
     def set_pixels(self, pixels):
         input_size = pixels.shape
@@ -69,6 +71,7 @@ class FftImage(torch.nn.Module):
         padded_input = torch.nn.functional.pad(pixels*4, pad)
         new_data = torch.rfft(padded_input, 2).squeeze(0)/self.scale_const
         self.pixels.data = new_data
+
 
 class PyramidImage(torch.nn.Module):
     """Pyramid of different resolution images."""
@@ -89,9 +92,8 @@ class PyramidImage(torch.nn.Module):
     def forward(self):
         output = torch.zeros(1, 3, *self.size)
         for level in self.pixels:
-            output += F.interpolate(level, 
+            output += F.interpolate(level,
                                     size=self.size,
-                                    mode='bilinear', 
+                                    mode='bilinear',
                                     align_corners=False)
         return output
-
