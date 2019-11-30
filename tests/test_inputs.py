@@ -56,3 +56,12 @@ def test_fft_set_identity():
     image.set_pixels(original)
     
     assert torch.nn.functional.mse_loss(image(), original).item() < tolerance
+
+def test_pyramid():
+    """Make a pyramid image of a given size"""
+    size = (123, 456)
+    image = sumie.inputs.PyramidImage(size)
+
+    output = image()
+    
+    assert output.size() == (1, 3,) + size

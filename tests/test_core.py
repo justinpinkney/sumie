@@ -6,7 +6,7 @@ import tests
 from pathlib import Path
 from glob import glob
 
-@pytest.mark.parametrize("param", ["rgb", "fft"])
+@pytest.mark.parametrize("param", ["rgb", "fft", "pyramid"])
 @pytest.mark.parametrize("decorrelate", [True, False])
 def test_image_init(param, decorrelate):
     """Allow initialisation with an existing image."""
