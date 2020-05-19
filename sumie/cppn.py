@@ -13,10 +13,11 @@ class cppn(torch.nn.Module):
 
     def __init__(self, size):
         super(cppn, self).__init__()
-        x = np.linspace(-1.5, 1.5, size)
-        y = np.linspace(-1.5, 1.5, size)
+        x = np.linspace(-3, 3, size)
+        y = np.linspace(-3, 3, size)
         xx, yy = np.meshgrid(x, y)
-        self.input = torch.Tensor(np.dstack((xx, yy))).permute(2, 1, 0).unsqueeze(0)
+        base_input = torch.Tensor(np.dstack((xx, yy))).permute(2, 1, 0).unsqueeze(0)
+        self.register_buffer('input', base_input)
         self.net = CPPN(8, 24)
 
     def forward(self):
