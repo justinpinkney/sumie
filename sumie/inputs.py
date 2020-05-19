@@ -90,7 +90,8 @@ class PyramidImage(torch.nn.Module):
         self.size = size
 
     def forward(self):
-        output = torch.zeros(1, 3, *self.size)
+        # todo this will fail with cuda, use buffer intead
+        output = torch.zeros(1, 3, *self.size).to(self.pixels[0].device)
         for level in self.pixels:
             output += F.interpolate(level,
                                     size=self.size,
