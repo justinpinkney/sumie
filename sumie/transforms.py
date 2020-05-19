@@ -48,7 +48,7 @@ class ScaleJitter(torch.nn.Module):
 
     def forward(self, image):
         scale = np.random.uniform(*self.amount)
-        return torch.nn.functional.interpolate(image, scale_factor=scale)
+        return torch.nn.functional.interpolate(image, scale_factor=scale, mode="bilinear")
 
 class RandomCrop(torch.nn.Module):
     """Randomly crops an image to a desired size."""
@@ -121,3 +121,13 @@ class RotationJitter(torch.nn.Module):
         affine = torch.Tensor(values.astype(np.float)).unsqueeze(0).to(image.device)
         grid = torch.nn.functional.affine_grid(affine, image.size())
         return torch.nn.functional.grid_sample(image, grid)
+
+class Tile(torch.nn.Module):
+    """Tiles the image 2x2"""
+    
+    def __init__(self):
+        super(Tile, self).__init__()
+        
+    def forward(self, image):
+        out = torch.cat((image, image), dim=2)
+        return torch.cat((out, out), dim=3)
