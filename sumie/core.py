@@ -113,7 +113,9 @@ class Optimiser():
         self.callbacks.append(func)
 
     def run(self, iterations=256, lr=0.05, output=None, output_skip=1, progress=False):
-        self.optimiser.lr = lr
+        
+        for group in self.optimiser.param_groups:
+            group['lr'] = lr
         
         # TODO replace output_skip with writer callback
         iterable = range(iterations)
